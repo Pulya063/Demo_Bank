@@ -1,0 +1,10 @@
+fastapi~=0.118.0
+uvicorn~=0.37.0
+sqlalchemy~=2.0.43
+psycopg2-binary
+python-dotenv
+alembic
+pydantic~=2.11.10
+starlette~=0.48.0
+requests~=2.32.5
+streamlit~=1.50.0
