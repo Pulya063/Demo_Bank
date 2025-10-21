@@ -138,7 +138,7 @@ with tabs[5]:
 # --- Вкладка: додавання транзакції ---
 with tabs[6]:
     st.subheader("💸 Add Transaction")
-    aid = st.text_input("Account ID", key="tx_id")
+    aid = st.selectbox("Account ID", [i["id"] for i in get_all_accounts()]. ,key="tx_id")
     value = st.number_input("Value", step=0.01, key="tx_value")
     currency = st.selectbox("Currency", ["USD", "EUR", "PLN", "UAH"], key="tx_currency")
     date = st.date_input("Date", value=datetime.now().date(), key="tx_date")
