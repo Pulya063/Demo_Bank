@@ -32,9 +32,16 @@ def create_transaction(aid: str, db: Session, transaction: TransactionSchema) ->
         name=transaction.name,
         category=transaction.category.value
     )
+
+    if transaction.value > 0:
+        account.balance += transaction.value
+    else:
+        account.balance += transaction.value
+
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)
+    db.refresh(account)
     return db_transaction.to_dict()
 
 
@@ -66,10 +73,26 @@ def search_account(db: Session, text: str):
 def get_account(db: Session, aid: str):
     return db.query(AccountModel).filter(AccountModel.id == aid).first()
 
+def update_account(db:Session, aid:str, account:AccountSchema):
+    db_account = get_account(db, aid)
+
+    if db_account is None:
+        raise HTTPException(status_code=404, detail=f"Account {aid} not found")
+
+    data = account.model_dump(exclude_unset=True)
+
+    for key, value in data.items():
+        if value == [] or (isinstance(value, str) and value.strip() == ""):
+            continue
+        setattr(db_account, key, value)
+
+    db.commit()
+    db.refresh(db_account)
+    return db_account
+
 
 def get_accounts(db: Session):
     return db.query(AccountModel).all()
-
 
 def get_transactions_by_account(db: Session, aid: str):
     account = get_account(db, aid)

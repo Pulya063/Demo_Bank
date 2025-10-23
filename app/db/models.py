@@ -1,9 +1,12 @@
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum as sqlEnum
+from sqlite3 import Date
+
+from sqlalchemy import Column, String, Float, Date, DateTime, ForeignKey, Enum as sqlEnum
 from sqlalchemy.orm import relationship
 from uuid import uuid4
 
 from app.db.database import Base
 from app.db.enums import Category
+
 
 class AccountModel(Base):
     __tablename__ = "accounts"
