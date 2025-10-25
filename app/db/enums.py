@@ -45,3 +45,10 @@ class Category(str, Enum):
     GIFTS_DONATIONS = "Gifts & Donations"
     PERSONAL_CARE = "Personal Care"
     MISCELLANEOUS = "Miscellaneous"
+
+class Currency(str, Enum):
+    USD = "USD"
+    EUR = "EUR"
+    UAH = "UAH"
+    GBP = "GBP"
+    PLN = "PLN"

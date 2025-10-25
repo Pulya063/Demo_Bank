@@ -1,58 +1,14 @@
-from enum import Enum
 from pydantic import BaseModel, field_validator
-from datetime import datetime, date
+from datetime import datetime
 from typing import List
-
-class Category(str, Enum):
-    FOOD = "Food"
-    RESTAURANTS = "Restaurants"
-    COFFEE_SNACKS = "Coffee & Snacks"
-    GROCERIES = "Groceries"
-    TAKEAWAY = "Takeaway"
-
-    TRANSPORT = "Transport"
-    TAXI = "Taxi"
-    FUEL = "Fuel"
-    PUBLIC_TRANSPORT = "Public Transport"
-    CAR_MAINTENANCE = "Car Maintenance"
-
-    RENT = "Rent"
-    UTILITIES = "Utilities"
-    INTERNET_PHONE = "Internet & Phone"
-    REPAIRS = "Repairs"
-
-    ENTERTAINMENT = "Entertainment"
-    MOVIES = "Movies"
-    MUSIC_STREAMING = "Music & Streaming"
-    TRAVEL = "Travel"
-    HOBBIES = "Hobbies"
-
-    CLOTHING = "Clothing"
-    SHOES = "Shoes"
-    ACCESSORIES = "Accessories"
-
-    HEALTH = "Health"
-    PHARMACY = "Pharmacy"
-    FITNESS_SPORTS = "Fitness & Sports"
-    BEAUTY_SPA = "Beauty & Spa"
-
-    EDUCATION = "Education"
-    BOOKS_SUPPLIES = "Books & Supplies"
-    COURSES_TRAINING = "Courses & Training"
-
-    BANKING_FEES = "Banking Fees"
-    INVESTMENTS = "Investments"
-    INSURANCE = "Insurance"
-    TAXES = "Taxes"
-
-    GIFTS_DONATIONS = "Gifts & Donations"
-    PERSONAL_CARE = "Personal Care"
-    MISCELLANEOUS = "Miscellaneous"
-
+from app.db.enums import (
+    Currency,
+    Category
+)
 
 class TransactionSchema(BaseModel):
     value: float
-    currency: str
+    currency: Currency
     date: datetime
     name: str
     category: Category
@@ -66,6 +22,10 @@ class TransactionSchema(BaseModel):
                 raise ValueError("Date must be in format DD-MM-YYYY")
         return value
 
+
+    class Config:
+        orm_model = True
+
     # def trn_show(self):
     #     return {
     #         "value": self.value,
@@ -75,12 +35,19 @@ class TransactionSchema(BaseModel):
     #         "category": self.category.value,
     #     }
 
+class BalanceSchema(BaseModel):
+    balance: float
+    currency: Currency
+
+    class Config:
+        orm_model = True
+
 
 class AccountSchema(BaseModel):
     name: str
     surname: str
     birth_date: datetime
-    balance: float = 0.0
+    balance: List[BalanceSchema] = []
     transactions: List[TransactionSchema] = []  # завжди список!
 
     @field_validator('birth_date')
@@ -91,6 +58,10 @@ class AccountSchema(BaseModel):
             except ValueError:
                 raise ValueError("Birth date must be in format DD-MM-YYYY")
         return value
+
+
+    class Config:
+        orm_model = True
 
     # def acc_show(self, account_id: str):
     #     return {

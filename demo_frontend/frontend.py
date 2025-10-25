@@ -2,7 +2,9 @@ import streamlit as st
 import requests
 from datetime import datetime, date
 
-BACKEND_URL = "http://127.0.0.1:8011/bank"
+from aiohttp.abc import HTTPException
+
+BACKEND_URL = "http://127.0.0.1:8005/bank"
 
 st.set_page_config(page_title="Bank Account Manager", page_icon="💳", layout="centered")
 
@@ -13,12 +15,11 @@ def get_all_accounts():
     res = requests.get(f"{BACKEND_URL}/")
     return res.json() if res.status_code == 200 else {"error": res.text}
 
-def create_account(name, surname, birth_date, balance):
+def create_account(name, surname, birth_date):
     info = {
         "name": name,
         "surname": surname,
         "birth_date": birth_date.isoformat(),
-        "balance": balance,
         "transactions": []
     }
     res = requests.post(f"{BACKEND_URL}/", json=info)
@@ -28,12 +29,12 @@ def delete_accounts():
     res = requests.delete(f"{BACKEND_URL}/")
     return res.json() if res.status_code == 200 else {"error": res.text}
 
-def update_account(aid, name, surname, date, balance):
+def update_account(aid, name, surname, date):
     info = {
         "name": name,
         "surname": surname,
         "birth_date": date.isoformat(),
-        "balance": balance,
+        "balance": [],
         "transactions": []
     }
 
@@ -94,36 +95,38 @@ with tabs[1]:
     name = st.text_input("Name", key="create_name")
     surname = st.text_input("Surname", key="create_surname")
     birth_date = st.date_input("Birth Date", value=date(2000, 1, 1), key="create_birth")
-    balance = st.number_input("Balance", min_value=0.0, step=0.01, key="create_balance")
 
     if st.button("Create Account", key="create_btn"):
-        result = create_account(name, surname, birth_date, balance)
+        result = create_account(name, surname, birth_date)
         st.json(result)
 
 # --- Вкладка: оновлення ---
 with tabs[2]:
     st.subheader("✏️ Update Account")
-    aid = st.selectbox("Accoun ID", [i["id"] for i in get_all_accounts()], key="update_aid")
+    aid = st.selectbox("Account ID", [i['id'] for i in get_all_accounts()], key="update_aid")
 
     res = requests.get(f"{BACKEND_URL}/account/{aid}")
     account = res.json()
-    if account:
+    if res.status_code == 200:
         name = st.write(account["name"])
         surname = st.write(account["surname"])
         date_str = account["birth_date"]
         birth_date_obj = datetime.fromisoformat(date_str).date()
         w_date = st.write(birth_date_obj.isoformat())
-        balance = st.write(account["balance"])
+        res = requests.get(f"{BACKEND_URL}/balance/{aid}")
+        data = res.json()
+        st.write(data["currencies"])
     else:
         st.warning("Please check the Account ID first")
 
     u_name = st.text_input("Name", key="update_name")
     u_surname = st.text_input("Surname", key="update_surname")
     u_birth_date = st.date_input("Birth Date", value=date(2000, 1, 1), key="update_birth")
-    u_balance = st.number_input("Balance", min_value=0.0, step=0.01, key="update_balance")
 
     if st.button("Update Account", key="update_account_btn"):
-        result = update_account(aid, u_name, u_surname, u_birth_date, u_balance)
+        if u_name == "" and u_surname == "":
+            st.warning("Please write correct name and surname")
+        result = update_account(aid, u_name, u_surname, u_birth_date)
         if result == "error":
             st.error("error")
         else:
@@ -133,17 +136,19 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("❌ Delete Account")
-    del_id = st.selectbox("Account ID", [i["id"] for i in get_all_accounts()], key="delete_id")
+    del_id = st.selectbox("Account ID", [i['id'] for i in get_all_accounts()], key="delete_id")
     res = requests.get(f"{BACKEND_URL}/account/{del_id}")
     del_account = res.json()
 
-    if del_account:
+    if res.status_code == 200:
         name = st.write(del_account["name"])
         surname = st.write(del_account["surname"])
         date_str = del_account["birth_date"]
         birth_date_obj = datetime.fromisoformat(date_str).date()
         w_date = st.write(birth_date_obj.isoformat())
-        balance = st.write(del_account["balance"])
+        data = requests.get(f"{BACKEND_URL}/balance/{del_id}")
+        del_data = data.json()
+        balance = st.write(del_data["currencies"])
     else:
         st.warning("Please check the Account ID first")
 
@@ -169,13 +174,17 @@ with tabs[5]:
 with tabs[6]:
     st.subheader("💸 Add Transaction")
     res = requests.get(f"{BACKEND_URL}/account/{aid}")
-    account = res.json
-
-    aid = st.selectbox("Account ID",[i["id"] for i in get_all_accounts()], key="add_aid")
-    value = st.number_input("Value", step=0.01, key="tx_value")
-    currency = st.selectbox("Currency", ["USD", "EUR", "PLN", "UAH"], key="tx_currency")
-    date = st.date_input("Date", value=datetime.now().date(), key="tx_date")
-    name_tx = st.text_input("Transaction Name", key="tx_name")
+    account = res.json()
+    if res.status_code == 200:
+        aid = st.selectbox("Account ID",[i["id"] for i in get_all_accounts()], key="add_aid")
+        value = st.number_input("Value", step=0.01, key="tx_value")
+        res = requests.get(f"{BACKEND_URL}/currencies")
+        currencies = res.json()
+        currency = st.selectbox("Currency", currencies, key="tx_currency")
+        date = st.date_input("Date", value=datetime.now().date(), key="tx_date")
+        name_tx = st.text_input("Transaction Name", key="tx_name")
+    else:
+        st.warning("Please check the Account ID first")
 
     category = st.selectbox("Category", [
         "Food","Restaurants","Coffee & Snacks","Groceries","Takeaway",
@@ -187,10 +196,9 @@ with tabs[6]:
         result = add_transaction(aid, value, currency, date, name_tx, category)
         st.json(result)
 
-# --- Вкладка: перегляд транзакцій ---
 with tabs[7]:
     st.subheader("📜 Show Transactions")
-    aid_tx = st.selectbox("Account ID",[i["id"] for i in get_all_accounts()],key="id")
+    aid_tx = st.selectbox("Account ID",[i['id'] for i in get_all_accounts()],key="id")
     if st.button("Show Transactions", key="show_tx_btn"):
         result = show_transactions(aid_tx)
         st.json(result)
