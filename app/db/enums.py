@@ -7,6 +7,8 @@ class Category(str, Enum):
     GROCERIES = "Groceries"
     TAKEAWAY = "Takeaway"
 
+    WORK = "Work"
+
     TRANSPORT = "Transport"
     TAXI = "Taxi"
     FUEL = "Fuel"

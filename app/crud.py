@@ -1,5 +1,4 @@
 from typing import Any
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import uuid4
@@ -130,9 +129,10 @@ def get_balance(db: Session, aid):
     balance =  db.query(BalanceModel).filter(BalanceModel.account_id == aid).first()
     if not balance:
         raise HTTPException(status_code=404, detail=f"Account balance {aid} not found")
+    return balance
 
 def get_accounts(db: Session):
-    account =  db.query(AccountModel).all()
+    account = db.query(AccountModel).all()
     if not account:
         raise HTTPException(status_code=404, detail=f"Account not found")
     return account

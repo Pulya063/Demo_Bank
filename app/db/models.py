@@ -1,5 +1,5 @@
 from typing import Any
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum as sqlEnum, JSON
+from sqlalchemy import Column, String, Float, Date, DateTime, ForeignKey, Enum as sqlEnum, JSON
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 from uuid import uuid4
@@ -18,15 +18,15 @@ class BalanceModel(Base):
     def to_dict(self):
         return {
             'account_id': self.account_id,
-            'currencies': self.currencies,
+            'currencies': self.currencies
         }
 
 class AccountModel(Base):
     __tablename__ = "accounts"
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
-    name = Column(String, nullable=False)
-    surname = Column(String, nullable=False)
-    birth_date = Column(DateTime, nullable=True)
+    name = Column(String(50), nullable=False)
+    surname = Column(String(50), nullable=False)
+    birth_date = Column(Date, nullable=True)
 
     balance = relationship("BalanceModel", back_populates="account", cascade="all, delete-orphan")
     transactions = relationship("TransactionModel", back_populates="account", cascade="all, delete-orphan")

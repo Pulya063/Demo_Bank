@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app import crud
+from app.db.enums import Category, Currency
 from app.db.schemas import (
     AccountSchema,
-    TransactionSchema,
-    Currency
+    TransactionSchema
 )
 
 router = APIRouter(prefix="/bank", tags=["Accounts"])
@@ -52,10 +52,17 @@ def delete_account_endpoint(aid: str, db: Session = Depends(get_db)):
 
 @router.get("/currencies")
 def get_currencies_endpoint():
-    currencies =  [i for i in Currency]
+    currencies = [i for i in Currency]
     if not currencies:
         raise HTTPException(status_code=404, detail="Currencies not found")
     return currencies
+
+@router.get("/category")
+def get_categories():
+    categories = [i for i in Category]
+    if not categories:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return categories
 @router.delete("/")
 def delete_accounts_endpoint(db: Session = Depends(get_db)):
     accounts = crud.delete_accounts(db)

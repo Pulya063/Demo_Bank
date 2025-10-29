@@ -7,3 +7,4 @@ pydantic~=2.11.10
 starlette~=0.48.0
 requests~=2.32.5
 streamlit~=1.50.0
+pytest
