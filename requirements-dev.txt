@@ -1,0 +1,14 @@
+pytest
+pytest-cov
+pre-commit
+black
+isort
+mypy
+ruff
+codecov
+requests
+fastapi
+starlette
+sqlalchemy
+httpx
+uvicorn

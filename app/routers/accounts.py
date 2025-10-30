@@ -24,7 +24,7 @@ def update_account(aid:str, account:AccountSchema, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Account haven`t been updated")
     return db_account
 
-@router.get("/account/{aid}")
+@router.get("/{aid}")
 def get_account_endpoint(aid: str, db: Session = Depends(get_db)):
     db_account = crud.get_account(db, aid)
     if not db_account:
@@ -46,15 +46,15 @@ def search_account(query: str,db: Session = Depends(get_db)):
 
 @router.delete("/{aid}")
 def delete_account_endpoint(aid: str, db: Session = Depends(get_db)):
-    account =  crud.delete_account(db, aid)
+    account = crud.get_account(db, aid)
     if not account:
-        raise HTTPException(status_code=404, detail="Account haven`t been deleted")
+        raise HTTPException(status_code=404, detail="Account not found")
+    crud.delete_account(db, aid)
+    return {"detail": "deleted successfully"}
 
 @router.get("/currencies")
 def get_currencies_endpoint():
-    currencies = [i for i in Currency]
-    if not currencies:
-        raise HTTPException(status_code=404, detail="Currencies not found")
+    currencies = [c.value for c in Currency]
     return currencies
 
 @router.get("/category")

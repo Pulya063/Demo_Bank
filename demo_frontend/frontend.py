@@ -10,7 +10,7 @@ st.title("💳 Bank Account Manager")
 
 def get_all_accounts():
     res = requests.get(f"{BACKEND_URL}/")
-    return res.json() if res.status_code == 200 else {"error": res.text}
+    return res.json() if res.status_code == 200 else []
 
 def create_account(name, surname, birth_date):
     info = {
@@ -78,7 +78,8 @@ tabs = st.tabs([
 with tabs[0]:
     st.subheader("📋 All Accounts")
     if st.button("Refresh Accounts", key="refresh_accounts"):
-        data = get_all_accounts()
+        res = requests.get(f"{BACKEND_URL}/")
+        data = res.json()
         st.json(data)
 
 with tabs[1]:
@@ -94,12 +95,11 @@ with tabs[1]:
 
 with tabs[2]:
     st.subheader("✏️ Update Account")
-    accounts = get_all_accounts() or []
-    account_ids = [i.get('id') for i in accounts if 'id' in i]
+    account_ids = [i.get('id') for i in get_all_accounts() if 'id' in i]
     aid = st.selectbox("Account ID", account_ids, key="update_aid")
 
     if aid:
-        res = requests.get(f"{BACKEND_URL}/account/{aid}")
+        res = requests.get(f"{BACKEND_URL}/{aid}")
         if res.status_code == 200:
             account = res.json()
             st.write(account["name"])
@@ -135,10 +135,9 @@ with tabs[2]:
 
 with tabs[3]:
     st.subheader("❌ Delete Account")
-    del_id = st.selectbox("Account ID", [i['id'] for i in get_all_accounts()], key="delete_id")
-    res = requests.get(f"{BACKEND_URL}/account/{del_id}")
+    del_id = st.selectbox("Account ID", [i.get('id') for i in get_all_accounts()], key="delete_id")
+    res = requests.get(f"{BACKEND_URL}/{del_id}")
     del_account = res.json()
-
     if res.status_code == 200:
         name = st.write(del_account["name"])
         surname = st.write(del_account["surname"])
@@ -171,7 +170,7 @@ with tabs[5]:
 
 with tabs[6]:
     st.subheader("💸 Add Transaction")
-    res = requests.get(f"{BACKEND_URL}/account/{aid}")
+    res = requests.get(f"{BACKEND_URL}/{aid}")
     account = res.json()
     if res.status_code == 200:
         name = st.write(account["name"])
@@ -183,7 +182,7 @@ with tabs[6]:
         balance = st.write(data_txt.json())
 
 
-        aid = st.selectbox("Account ID", [i['id'] for i in get_all_accounts() if i.status_code != 200], key="add_aid")
+        aid = st.selectbox("Account ID", [i['id'] for i in get_all_accounts()], key="add_aid")
         value = st.number_input("Value", step=0.01, key="tx_value")
         res = requests.get(f"{BACKEND_URL}/currencies")
         currencies = res.json()

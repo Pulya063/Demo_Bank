@@ -66,20 +66,15 @@ def create_transaction(aid: str, db: Session, transaction: TransactionSchema) ->
 
 
 def delete_account(db: Session, aid: str):
-    try:
-        account = get_account(db, aid)
-        if not account:
-            raise HTTPException(status_code=404, detail=f"Account {aid} not found")
+    account = get_account(db, aid)
+    if account:
         db.delete(account)
         db.commit()
         return {
             "detail": f"Account {aid} deleted successfully",
             "remaining_accounts": get_accounts(db)
         }
-
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=404, detail=f"Error deleting account: {e}")
+    raise HTTPException(status_code=404, detail=f"Account {aid} not found")
 
 def delete_accounts(db:Session):
     try:
@@ -88,7 +83,7 @@ def delete_accounts(db:Session):
             db.delete(i)
         db.commit()
         return {
-            "detail": f"All accounts deleted successfully",
+            "detail": "All accounts deleted successfully",
         }
     except Exception as e:
         db.rollback()
