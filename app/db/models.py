@@ -9,6 +9,7 @@ from app.db.schemas import Currency
 
 
 class BalanceModel(Base):
+    """Model representing the balance of an account."""
     __tablename__ = 'balance'
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     currencies = Column(MutableDict.as_mutable(JSON), default=lambda: {cur.value: 0 for cur in Currency})
@@ -22,6 +23,7 @@ class BalanceModel(Base):
         }
 
 class AccountModel(Base):
+    """Model representing a bank account."""
     __tablename__ = "accounts"
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     name = Column(String(50), nullable=False)
@@ -42,6 +44,7 @@ class AccountModel(Base):
         }
 
 class TransactionModel(Base):
+    """Model representing a financial transaction."""
     __tablename__ = "transactions"
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     value = Column(Float, default=0.0)

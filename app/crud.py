@@ -7,6 +7,7 @@ from app.db.schemas import AccountSchema, TransactionSchema, Currency
 
 
 def create_account(db: Session, account: AccountSchema) -> dict[str, str | None | list[Any] | Any]:
+    """Creates a new account and initializes its balance."""
     try:
         account_data = account.model_dump()
 
@@ -19,6 +20,7 @@ def create_account(db: Session, account: AccountSchema) -> dict[str, str | None 
         db.commit()
         db.refresh(db_account)
 
+        # Initialize balance for the new account
         db_balance = BalanceModel(
             id=str(uuid4()),
             currencies={cur.value: 0 for cur in Currency},
@@ -36,6 +38,7 @@ def create_account(db: Session, account: AccountSchema) -> dict[str, str | None 
 
 
 def create_transaction(aid: str, db: Session, transaction: TransactionSchema) -> TransactionModel:
+    """Creates a transaction and updates the account balance."""
     try:
         transaction_data = transaction.model_dump()
         if transaction_data is None:
@@ -50,6 +53,7 @@ def create_transaction(aid: str, db: Session, transaction: TransactionSchema) ->
         if not balance_record:
             raise HTTPException(status_code=404, detail="Balance not found")
 
+        # Update balance based on transaction currency
         cur = db_transaction.currency
         if cur not in balance_record.currencies:
             balance_record.currencies[cur] = 0
@@ -66,6 +70,7 @@ def create_transaction(aid: str, db: Session, transaction: TransactionSchema) ->
 
 
 def delete_account(db: Session, aid: str):
+    """Deletes an account by ID."""
     account = get_account(db, aid)
     if account:
         db.delete(account)
@@ -77,6 +82,7 @@ def delete_account(db: Session, aid: str):
     raise HTTPException(status_code=404, detail=f"Account {aid} not found")
 
 def delete_accounts(db:Session):
+    """Deletes all accounts from the database."""
     try:
         accounts = db.query(AccountModel).all()
         for i in accounts:
@@ -90,6 +96,7 @@ def delete_accounts(db:Session):
         raise HTTPException(status_code=404, detail="There was an error deleting accounts")
 
 def search_account(db: Session, text: str):
+    """Searches for accounts by name (case-insensitive)."""
     accounts = db.query(AccountModel).filter(AccountModel.name.ilike(f"%{text}%")).all()
     if not accounts:
         raise HTTPException(status_code=404, detail="Account not found")
@@ -97,9 +104,11 @@ def search_account(db: Session, text: str):
 
 
 def get_account(db: Session, aid: str):
+    """Retrieves a single account by ID."""
     return db.query(AccountModel).filter(AccountModel.id == aid).first()
 
 def update_account(db:Session, aid:str, account:AccountSchema):
+    """Updates account details."""
     try:
         db_account = get_account(db, aid)
 
@@ -121,22 +130,26 @@ def update_account(db:Session, aid:str, account:AccountSchema):
         raise HTTPException(status_code=404, detail=f"Error updating account: {e}")
 
 def get_balance(db: Session, aid):
+    """Retrieves the balance for a specific account."""
     balance =  db.query(BalanceModel).filter(BalanceModel.account_id == aid).first()
     if not balance:
         raise HTTPException(status_code=404, detail=f"Account balance {aid} not found")
     return balance
 
 def get_accounts(db: Session):
+    """Retrieves all accounts."""
     account = db.query(AccountModel).all()
     if not account:
         raise HTTPException(status_code=404, detail=f"Account not found")
     return account
 
 def get_transactions_by_account(db: Session, aid: str):
+    """Retrieves all transactions for a specific account."""
     account = get_account(db, aid)
     if not account:
         raise HTTPException(status_code=404, detail=f"Account {aid} not found")
     return db.query(TransactionModel).filter(TransactionModel.account_id == aid).all()
 
 def get_transactions(db: Session):
+    """Retrieves all transactions in the system."""
     return db.query(TransactionModel).all()

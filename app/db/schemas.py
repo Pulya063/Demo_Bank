@@ -7,6 +7,7 @@ from app.db.enums import (
 )
 
 class TransactionSchema(BaseModel):
+    """Schema for transaction data validation."""
     value: float
     currency: Currency
     date: datetime
@@ -26,6 +27,7 @@ class TransactionSchema(BaseModel):
         }
 
 class BalanceSchema(BaseModel):
+    """Schema for balance data."""
     balance: float
     currency: Currency
 
@@ -34,17 +36,19 @@ class BalanceSchema(BaseModel):
 
 
 class AccountSchema(BaseModel):
+    """Schema for account creation and validation."""
     name: constr(min_length=1, max_length=50)
     surname: constr(min_length=1, max_length=50)
     birth_date: date
     balance: List[BalanceSchema] = []
-    transactions: List[TransactionSchema] = []  # завжди список!
+    transactions: List[TransactionSchema] = []
 
     class Config:
         orm_model = True
 
     @field_validator("birth_date")
     def valid_date(cls, value):
+        """Validates that birth date is in the past."""
         if value >= date.today():
             raise ValueError("Birth date must be in the past")
         return value
